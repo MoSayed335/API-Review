@@ -3,7 +3,9 @@ using API.Utility;
 using API.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using API.Models;
+using API.DTOs;
 using System.Linq;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace API.Areas.Admin.Controllers
 {
     [Area(SD.Admin_Area)]
@@ -38,11 +40,29 @@ namespace API.Areas.Admin.Controllers
             return Ok();
         }
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> Getone(int id)
         {
-            var category = await _context.Categories.ToListAsync();
+            var category =  _context.Categories.Where(c=>c.Id == id);
             return Ok(category);
         }
+        [HttpPut]
+        public IActionResult UpdateCategory(int id, CategoryUpdate categoryUpdate)
+        {
+            var category = _context.Categories.Where(c=>c.Id == id).FirstOrDefault();
+            if(category is null && id <0)
+            {
+
+                return BadRequest("this Category is empty");
+            }
+            categoryUpdate.Name = category.Name;
+            categoryUpdate.Description = category.Description;
+            categoryUpdate.status = category.status;
+            _context.Categories.Update(category);
+            _context.SaveChanges();
+            return Ok(category);
+        }
+
+
         [HttpPost]
         public async Task<IActionResult> AddCategory(Category category)
         {
@@ -51,5 +71,17 @@ namespace API.Areas.Admin.Controllers
 
             return Ok();
         }
+        [HttpDelete]
+        public IActionResult DeleteCategory(int id)
+        {
+            var category = _context.Categories.Where(c => c.Id == id).FirstOrDefault();
+            if (category is null && id < 0)
+                return BadRequest("Invalid");
+
+            _context.Categories.Remove(category);
+            _context.SaveChanges();
+            return Ok();
+        }
+
     }
 }
